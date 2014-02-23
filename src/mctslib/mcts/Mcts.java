@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package mcts;
-
-import game.Action;
-import game.State;
+package mctslib.mcts;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import mctslib.game.Action;
+import mctslib.game.State;
 
 /**
  * 

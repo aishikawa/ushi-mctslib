@@ -16,7 +16,7 @@
 
 package sample_game.player;
 
-import mcts.Mcts;
+import mctslib.mcts.Mcts;
 import sample_game.Say10;
 import sample_game.Say10Action;
 

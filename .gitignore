@@ -2,6 +2,7 @@
 .project
 .settings/
 bin/
-lib/
+classes/
+dest/
 doc/
 

@@ -16,7 +16,7 @@
 
 package sample_game;
 
-import game.Action;
+import mctslib.game.Action;
 
 /**
  * Action of a say10 

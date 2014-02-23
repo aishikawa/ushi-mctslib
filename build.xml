@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+  <project name="mctslib" default="pack" basedir="./">
+
+  <property name="compile" value="classes"/>
+  <property name="dest" value="dest" />
+
+  <target name="directory">
+    <mkdir dir="${compile}"/>
+  	<mkdir dir="${dest}" />
+   </target>
+  	
+  <target name="copy" depends="directory" >
+   	<copy file="LICENSE" toDir="${dest}" overwrite="yes" />
+  	<copy file="README" toDir="${dest}" overwrite="yes" />
+  	<copy file="NOTICE" toDir="${dest}" overwrite="yes" />
+  </target>
+
+  <target name="compile" depends="directory">
+    <javac
+     srcdir="src"
+     destdir="${compile}"
+     classpath="${classpath}"
+     excludes="build.xml"
+   	 includeantruntime="false"
+    />
+  </target>
+  	
+  <target name="lib_jar" depends="compile">
+  	<jar basedir="${compile}\mctslib" destfile="${dest}/mctslib.jar" />
+  </target>
+  	
+  <target name="sample_jar" depends="compile">
+  	<jar basedir="${compile}" destfile="${dest}/sample.jar">
+  		<manifest>
+  			<attribute name="Main-Class" value="sample_game.Main" />
+  		</manifest>
+  	</jar>
+  </target>
+
+  <target name="pack" depends="copy, lib_jar, sample_jar" />
+  	
+  	
+</project>

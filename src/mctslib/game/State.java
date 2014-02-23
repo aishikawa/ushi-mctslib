@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package game;
+package mctslib.game;
 
 import java.util.List;
 import java.util.Map;
