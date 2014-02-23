@@ -1,4 +1,17 @@
 <?xml version="1.0"?>
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+      http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+ -->
   <project name="mctslib" default="pack" basedir="./">
 
   <property name="compile" value="classes"/>
@@ -15,9 +28,9 @@
   	<copy file="NOTICE" toDir="${dest}" overwrite="yes" />
   </target>
 
-  <target name="compile" depends="directory">
+  <target name="compile_lib" depends="directory">
     <javac
-     srcdir="src"
+     srcdir="src\mctslib"
      destdir="${compile}"
      classpath="${classpath}"
      excludes="build.xml"
@@ -25,11 +38,21 @@
     />
   </target>
   	
-  <target name="lib_jar" depends="compile">
-  	<jar basedir="${compile}\mctslib" destfile="${dest}/mctslib.jar" />
+  <target name="compile_sample" depends="directory">
+    <javac
+     srcdir="src\sample_game"
+     destdir="${compile}"
+     classpath="${classpath}"
+     excludes="build.xml"
+   	 includeantruntime="false"
+    />
   </target>
   	
-  <target name="sample_jar" depends="compile">
+  <target name="lib_jar" depends="compile_lib">
+  	<jar basedir="${compile}" destfile="${dest}/mctslib.jar" />
+  </target>
+  	
+  <target name="sample_jar" depends="compile_lib, compile_sample">
   	<jar basedir="${compile}" destfile="${dest}/sample.jar">
   		<manifest>
   			<attribute name="Main-Class" value="sample_game.Main" />
