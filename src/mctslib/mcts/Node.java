@@ -14,17 +14,29 @@
  * limitations under the License.
  */
 
-package mctslib.game;
+package mctslib.mcts;
 
-/**
- * 
- * Game action. Your game action must extend this.
- *
- */
-public abstract class Action {
-	@Override
-	public abstract boolean equals(Object o);
+import java.util.Map;
+
+import mctslib.game.Action;
+import mctslib.game.State;
+
+class Node<A extends Action> {
+	State<A> state;
+	Node<A> parent;
+	//Map<Node<A>, A> children;
+	Map<A, Node<A>> children;
+	int numVisits;
+	double value;
+	
+	Node(State<A> s, Node<A> p) {
+		state = s;
+		parent = p;
+	}
 	
 	@Override
-	public abstract int hashCode();
+	public String toString() {
+		return state.toString();
+	}
+
 }
