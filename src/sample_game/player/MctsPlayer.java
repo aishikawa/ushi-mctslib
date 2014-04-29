@@ -33,6 +33,7 @@ public class MctsPlayer extends Player {
 		mcts.setTimeLimit(1000);
 		mcts.setExpandThreshold(2);
 		mcts.setVerbose(true);
+		mcts.setNumThreads(2);
 	}
 	
 	@Override

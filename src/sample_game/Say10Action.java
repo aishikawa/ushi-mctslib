@@ -39,6 +39,20 @@ public class Say10Action extends Action {
 	public int get() {
 		return number;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof Say10Action) {
+			Say10Action s10a = (Say10Action)o;
+			return number == s10a.number;
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return number;
+	}
 	
 	@Override
 	public String toString() {

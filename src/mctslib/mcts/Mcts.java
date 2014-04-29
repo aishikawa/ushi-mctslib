@@ -16,11 +16,12 @@
 
 package mctslib.mcts;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 
 import mctslib.game.Action;
 import mctslib.game.State;
@@ -37,14 +38,16 @@ public class Mcts<A extends Action> {
 	private double C;
 	private Random rand;
 	private boolean verbose;
-
 	
+	private int numThreads;
+		
 	public Mcts() {
 		EXPAND_THRESHOLD = 1;
 		TIME_LIMIT = 1000;
 		C = Math.sqrt(2);
 		rand = new Random();
 		verbose = false;
+		numThreads = 1;
 	}
 	
 	/**
@@ -90,125 +93,69 @@ public class Mcts<A extends Action> {
 		verbose = v;
 	}
 	
+	public void setNumThreads(int n) {
+		numThreads = n;
+	}
+	
 	/**
 	 * Selct an action with Monte Carlo Tree Search
 	 * @param state
 	 * @return action
 	 */
-	public A getAction(State<A> state) {
-		long sTime = System.currentTimeMillis();
+	public A getAction(State<A> state) {		
+
+		Set<Thread> threads = new HashSet<Thread>();
+		Set<Searcher<A>> searchers = new HashSet<Searcher<A>>();
+		for (int i=0; i<numThreads; i++) {
+			State<A> root = state.getDeepCopy();
+			Searcher<A> searcher = new Searcher<A>(EXPAND_THRESHOLD, TIME_LIMIT, C, rand.nextLong(), root);
+			searchers.add(searcher);
+			Thread thread = new Thread(searcher);
+			thread.start();
+			threads.add(thread);
+		}
 		
-		// Monte Carlo Tree Search
-		Node root = new Node(state, null);		
-		while (System.currentTimeMillis() - sTime < TIME_LIMIT) {
-			Node selected = select(root);
-			if (selected.numVisits >= EXPAND_THRESHOLD - 1) {
-				expand(selected);
+		for (Thread t : threads) {
+			try {
+				t.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
-			Map<Integer, Double> score = playout(selected);
-			backPropagate(selected, score);
+		}
+		
+		
+		Map<A, Node<A>> children = new HashMap<A, Node<A>>();
+		for (Searcher<A> s : searchers) {
+			Map<A, Node<A>> threadChildren = s.getRootChildren();
+			for (A a : threadChildren.keySet()) {
+				Node<A> threadChild = threadChildren.get(a);
+				if (children.containsKey(a)) {
+					Node<A> node = children.get(a);
+					node.numVisits += threadChild.numVisits;
+					node.value += threadChild.value;
+				} else {
+					children.put(a, threadChild);
+				}
+			}
 		}
 		
 		// Select the best average value action.
 		A ret = null;
 		double bestValue = -100.0;
-		for (Node n : root.children.keySet()) {
+		for (Entry<A, Node<A>> entry : children.entrySet()) {
+			A action = entry.getKey();
+			Node<A> node = entry.getValue();
 			if (verbose) {
-				A action = root.children.get(n);
-				System.out.println("action:"+action+"  average value:"+(n.value/n.numVisits)+"  num visits:"+n.numVisits);
+				System.out.println("action:"+action+"  average value:"+(node.value/node.numVisits)+"  num visits:"+node.numVisits);
 			}
-			double value = n.value / n.numVisits;
+			double value = node.value / node.numVisits;
 			if (ret == null || bestValue < value) {
 				bestValue = value;
-				ret = root.children.get(n);
-			}			
+				ret = action;
+			}
 		}
 		
 		return ret;
 	}
 	
-	
-	private Node select(Node node) {
-		if (node.state.isTerminal() || node.numVisits < EXPAND_THRESHOLD) {
-			return node;
-		}
-		
-		ArrayList<Node> candidates = new ArrayList<Node>();
-		for (Node n : node.children.keySet()) {
-			if (n.numVisits < EXPAND_THRESHOLD) {
-				candidates.add(n);
-			}
-		}
-		int size = candidates.size();
-		if (size != 0) {
-			return candidates.get(rand.nextInt(size));
-		}
-		
-		Node ret = null;
-		double bestScore = -100.0;
-		for (Node n : node.children.keySet()) {
-			double score = n.value/n.numVisits + C * Math.sqrt(Math.log(n.parent.numVisits)/n.numVisits);
-			if (ret == null || score > bestScore) {
-				bestScore = score;
-				ret = n;
-			}
-		}
-
-		return select(ret);
-	}
-	
-	private void expand(Node node) {
-		node.children = new HashMap<Node, A>();
-		
-		List<A> actions = node.state.getLegalActions();
-		for (A a : actions) {
-			State<A> nextState = node.state.getDeepCopy();
-			nextState.process(a);
-			Node child = new Node(nextState, node);
-			node.children.put(child, a);
-		}
-	}
-	
-	private Map<Integer, Double> playout(Node node) {
-
-		State<A> state = node.state.getDeepCopy();
-		while (state.isTerminal() == false) {
-			List<A> actions = state.getLegalActions();
-
-			A m = actions.get(rand.nextInt(actions.size()));				
-			state.process(m);
-		}
-
-
-		Map<Integer, Double> scoreMap = state.getScore();
-
-		return scoreMap;
-	}
-	
-	private void backPropagate(Node node, Map<Integer, Double> score) {
-		node.numVisits += 1;
-		while (node.parent != null) {
-			node.value += score.get(node.parent.state.getTurn());
-			node = node.parent;
-			node.numVisits += 1;
-		}
-	}
-	
-	private class Node {
-		State<A> state;
-		Node parent;
-		Map<Node, A> children;
-		int numVisits;
-		double value;
-		
-		Node(State<A> s, Node p) {
-			state = s;
-			parent = p;
-		}
-		
-		@Override
-		public String toString() {
-			return state.toString();
-		}
-	}
 }
